@@ -1,0 +1,327 @@
+
+
+%figurstørrelser.
+ 
+\documentclass[reprint,english,notitlepage]{revtex4-1}  % defines the basic parameters of the document
+% if you want a single-column, remove reprint
+
+% allows special characters (including æøå)
+\usepackage[utf8]{inputenc}
+\usepackage [norsk]{babel} %if you write norwegian
+%\usepackage[english]{babel}  %if you write english
+
+
+%% note that you may need to download some of these packages manually, it depends on your setup.
+%% I recommend downloading TeXMaker, because it includes a large library of the most common packages.
+
+\usepackage{physics,amssymb}  % mathematical symbols (physics imports amsmath)
+\usepackage{graphicx}         % include graphics such as plots
+\usepackage{xcolor}           % set colors
+\usepackage{hyperref}         % automagic cross-referencing (this is GODLIKE)
+\usepackage{tikz}             % draw figures manually
+\usepackage{listings}         % display code
+\usepackage{subfigure}        % imports a lot of cool and useful figure commands
+
+% defines the color of hyperref objects
+% Blending two colors:  blue!80!black  =  80% blue and 20% black
+\hypersetup{ % this is just my personal choice, feel free to change things
+    colorlinks,
+    linkcolor={red!50!black},
+    citecolor={blue!50!black},
+    urlcolor={blue!80!black}}
+
+%% Defines the style of the programming listing
+%% This is actually my personal template, go ahead and change stuff if you want
+\lstset{ %
+	inputpath=,
+	backgroundcolor=\color{white!88!black},
+	basicstyle={\ttfamily\scriptsize},
+	commentstyle=\color{magenta},
+	language=Python,
+	morekeywords={True,False},
+	tabsize=4,
+	stringstyle=\color{green!55!black},
+	frame=single,
+	keywordstyle=\color{blue},
+	showstringspaces=false,
+	columns=fullflexible,
+	keepspaces=true}
+
+%% USEFUL LINKS:
+%%
+%%   UiO LaTeX guides:        https://www.mn.uio.no/ifi/tjenester/it/hjelp/latex/ 
+%%   mathematics:             https://en.wikibooks.org/wiki/LaTeX/Mathematics
+
+%%   PHYSICS !                https://mirror.hmc.edu/ctan/macros/latex/contrib/physics/physics.pdf
+
+%%   the basics of Tikz:       https://en.wikibooks.org/wiki/LaTeX/PGF/TikZ
+%%   all the colors!:          https://en.wikibooks.org/wiki/LaTeX/Colors
+%%   how to draw tables:       https://en.wikibooks.org/wiki/LaTeX/Tables
+%%   code listing styles:      https://en.wikibooks.org/wiki/LaTeX/Source_Code_Listings
+%%   \includegraphics          https://en.wikibooks.org/wiki/LaTeX/Importing_Graphics
+%%   learn more about figures  https://en.wikibooks.org/wiki/LaTeX/Floats,_Figures_and_Captions
+%%   automagic bibliography:   https://en.wikibooks.org/wiki/LaTeX/Bibliography_Management  (this one is kinda difficult the first time)
+%%   REVTeX Guide:             http://www.physics.csbsju.edu/370/papers/Journal_Style_Manuals/auguide4-1.pdf
+%%
+%%   (this document is of class "revtex4-1", the REVTeX Guide explains how the class works)
+
+
+%% CREATING THE .pdf FILE USING LINUX IN THE TERMINAL
+%% 
+%% [terminal]$ pdflatex template.tex
+%%
+%% Run the command twice, always.
+%% If you want to use \footnote, you need to run these commands (IN THIS SPECIFIC ORDER)
+%% 
+%% [terminal]$ pdflatex template.tex
+%% [terminal]$ bibtex template
+%% [terminal]$ pdflatex template.tex
+%% [terminal]$ pdflatex template.tex
+%%
+%% Don't ask me why, I don't know.
+
+\begin{document}
+
+
+
+\title{Oppgave 1A.8: En forenklet kode for stjernedannelse}
+\date{\today}               
+\author{L. Skywalker}
+\affiliation{Institute of Theoretical Astrophysics, University of Oslo,
+P.O. Box 1029 Blindern, 0315 Oslo, Galactic Empire} 
+\email{luke@astro.uio.galemp}
+
+
+\newpage
+
+\begin{abstract}
+Vi har laget en forenklet simulering av stjernedannelse for en stjerne med samme masse som solen. Vi starter med en gass
+med temperatur $20$K jevnt fordelt utover i en kule med radius $2.5\times10^{11}$m og total masse på en solmasse.
+Vi deler gass-skyen opp i 500 partikler med like stor masse og simulerer bevegelsen til disse i tidssteg på $10^{-6}$ år.
+Etter 0.7 år har skyen kollapset til en radius på 1.4 solradier og temperatur 541.000K og er dermed langt fra å begynne fusjonsreaksjoner.
+Metoden vår for å simulere stjernekollaps er rask da det kun tar noen minutter å simulere 0.7 år, men tilnœrmingen har
+mange begrensninger. Blant annet har vi laget en for enkel modell for å ta hensyn til trykk og stråling som oppstår når gassen blir varmere og som betydelig påvirker stjernedannelseprosessen.
+\end{abstract}
+\maketitle                                % creates the title, author, date & abstract
+
+
+
+\section{Introduksjon}
+\label{sect:intro}
+
+Stjerner fødes fra store molekylœre gass-skyer som trekker seg sammen på grunn av gravitasjonskrefter.
+De ytterste delen av gassen merker gravitasjon fra all gassen på innsiden og begynner derfor å falle 
+innover mot sentrum. Gass-skyen blir da tettere og varmere. Til slutt vil temperaturen i sentrum bli
+stor nok for kjernereaksjoner og vi har fått dannet en stjerne.
+
+Å kunne lage datasimuleringer av stjernedannelse er svœrt viktig for å forstå både prosessen
+som lager stjerner og for å kunne forstå fordelingen av stjerner i universet. For å simulere
+stjernedannelseprosessen i detalj trenger man i prinsippet å følge hvert eneste molekyl i gassen
+over en veldig lang tid. Hvert eneste gassmolekyl påvirkes i første omgang av tyngdekraften fra alle 
+andre gassmolekyler i gassen, men også fra andre krefter mellom molekylene i gassen. I prinsippet kan
+man lage en datasimulering der man man i deler opp hele stjernedannelseprosessen i et stort antall
+små tidssteg. I hvert lite tidssteg beregner man alle kreftene som virker på hvert molekyl fra
+alle andre molekyler og dermed hvordan dette molekylet beveger seg i løpet av tidssteget.
+
+Det er alt for mange molekyler i en slik gass-sky til at dette lar seg
+gjøre med dagens datamaskiner. Vi trenger derfor å gjøre forenklinger. I denne artikkelen vil vi
+se på en måte for å forenkle problemet og studere resultater og numerisk stabilitet for metoden.
+Vi trenger å redusere antall partikler som skal simuleres betydelig. I tillegg til
+gravitasjonskreftene mellom partiklene så bruker vi også en friksjonskraft mellom partiklene som en
+tilnærmelse til de kompliserte kreftene som virker mellom molekylene i en gass. 
+Ved å fordelen totalmassen til skya på de få partiklene vi velger å simulere så kan vi få en god tilnærmelse
+til den totale gravitasjonskrafta som virker i de forskjellige delene av skya. På denne måten kan vi beregne
+akselrasjonen til partiklene i hvert tidssteg og dermed få en simulering av kollapsen til skya.
+
+\section{Metode}
+
+ Vi velger $N$ partikler, der $N$ typisk kan vœre av størrelseorden 50-500. Dette er en enorm reduksjon i antall partikler. Vi trenger å passe på at disse få partiklene skal sette opp gravitasjonsfeltet, men samtidig vœre lette gasspartikler. Vi løser dette ved å la partiklene ha masse $M=M_\mathrm{tot}/N$, hvor $M_\mathrm{tot}$ er totalmassen til gass-skya, når gravitasjonsfeltet skal beregnes og $M=m_H$, hydrogenmassen, når egenskaper til gassen skal diskuteres. Dette kan vi gjøre siden gravitasjonsakselrasjonen til en partikkel er uavhengig av massen til partikkelen:
+\[
+F=ma=-G\frac{mM}{r^2}
+\]
+der $m$ forsvinner fra likningen. Dermed kan vi bruke partiklene våre både som små test-gasspartikler og som store massive partikler når vi ønsker det.
+
+
+For å kunne gjøre beregninger med gassen trenger vi å anta at vi har ideel gass. En ideel gass er en gass der partiklene ansees som punktpartikler (dvs. de har ingen utstrekning) og der eneste interaksjon mellom partiklene er elastiske støt ved kollisjoner. Dett er en god tilnærmelse til veldig mange gasser over store temperaturområder. Vi kommer til å trenge å finne temperaturen til gassen på gitte tidspunkt i simuleringen. Ved å ta gassperspektivet (la partiklene vœre hydrogenatomer) og summe opp den totale kinetiske energien til partiklene samt bruke at disse i middel skal vœre $\frac{3}{2}kT$ (se oppgave A1.5 i \citep{part1A}) så finner vi utgangstemperaturen til gassen:
+\[
+\frac{1}{N}\sum_{i=1}^N\frac{1}{2}m_Hv_i^2=\frac{3}{2}kT
+\]
+hvor $k$ er Boltzmannkonstanten og $v_i$ er farten til partikkel $i$, som gir
+\[
+T=\frac{m_H}{3kN}\sum_{i=1}^Nv_i^2.
+\]
+
+Vi trenger også å finne radiusen til gass-skya på forskjellige tidspunkter. Merk at noen partikler kan få stor nok hastighet til å slippe ut fra gravitasjonspotensiale og forsvinne fra gass-skya. Når vi beregner radiusen til gass-skya, så må vi passe på å ikke ta disse partiklene med i beregninga. Så lenge vi har kollaps, så regner vi med at kun et lite mindretall av partiklene kommer til å forlate skya. Vi beregner derfor gass-skyas radius på følgende måte: vi beregner avstanden $r$ til hver partikkel fra sentrum, sorterer disse, ekskluderer de $20\%$ av partiklene som har størst avstand og tar midlet over $r$ for de resterende $80\%$ av partiklene. Vi kaller denne midlere radiusen for $R$.
+
+For å bevege partiklene i simuleringen, så trenger vi først å beregne gravitasjonsakselrasjonen for å finne endring i hastighet, og deretter oppdatere hastigheten for å beregne ny posisjon i hvert tidssteg. En gitt partikkel $i$ har posisjonsvektor $\vec{r}_i=(x_i,y_i,z_i)$ hvor origo er plassert midt i gass-skya. Vektoren $\vec{r}_i$ peker til enhver tid på posisjonen til partikkel $i$. Partikkelen har hastighetsvektor
+\begin{equation}
+\label{eq:vel}
+\vec{v}_i=\frac{d\vec{r}_i}{dt}
+\end{equation}
+De eneste kreftene som virker på partiklene er gravitasjonskrefter fra alle andre partikler i gassen samt en forenklet friksjonskraft. Siden hele gass-skya er kuleformet, så kan vi for en gitt partikkel $i$ dele opp alle de andre partiklene i (1) de som ligger i kuleskallet på utsiden av partikkel $i$ og (2) de som ligger i kula (med sentrum i origo) på innsiden av partikkel $i$. Vi antar at gass-skya har jevn tetthet. Siden et kuleskall med jevn tetthet ikke virker med gravitasjonskrefter på det som er inne i skallet (som opplyst i \citep{part1A}), så kan vi se bort fra alle partikler på utsiden av $i$. Kula av alle partikler som er på innsiden av $i$ har en totalmasse $M(r_i)$ hvor $r_i$ er avstanden til partikkel $i$ fra origo ($r_i=|\vec{r}_i|$). Fra Newtons gravitasjonslov så blir krafta på partikkel $i$ da gitt ved
+\begin{equation}
+\label{eq:grav}
+\vec{F_i}=-G\frac{M(r_i)m}{r_i^3}\vec{r_i}
+\end{equation}
+hvor $G$ er gravitasjonskonstanten og $m$ per massen til partikkelen. Merk minustegnet som gjør at retningen til krafta er motsatt av retningen til $\vec{r}_i$ og er dermed rettet fra partikkelen og inn mot sentrum av gass-skya, slik som gravitasjonskrafta bør virke.
+
+Fra Newtons 2.lov har vi at
+\[
+\vec{F_i}=m\frac{d\vec{v}_i}{dt}
+\]
+som kombinert med likning \ref{eq:grav} gir oss
+\[
+d\vec{v}_i=-G\frac{M(r_i)m}{r^3}\vec{r_i}dt
+\]
+der $d\vec{v}_i$ er en liten endring i hastighetsvektoren. Vi kan godt kalle endringen $\Delta\vec{v}_i$. For et gitt lite tidssteg $dt$ (vi kan godt kalle det $\Delta t$) så har vi dermed alt vi trenger til å regne ut hastighetsendringen $\Delta\vec{v}_i$. Denne vektoren er altså den vektoren som hastighetsvektoren $\vec{v}_i$ endres med i løpet av tidsintervallet $\Delta t$ på grunn av gravitasjon fra de andre partiklene. Vi skal bruke et tidsintervall på  $10^{-6}$ år, men til slutt skal vi diskutere hva som skjer hvis vi endrer dette.
+
+I tilegg må vi ta hensyn til det som vi forenklet kaller friksjon: Når ladde partikler akselereres så gir de fra seg energi i form a stråling, og de bremses dermed ned. I tillegg vil trykk fra gassen på innsiden samt fra strålingen som produseres gjøre at partiklene på vei inn kolliderer og dermed bremses. Dette er svœrt kompliserte prosesser som vi modelerer ved å legge til en 'friksjonskraft' som gir akselrasjon:
+\[
+\frac{\Delta\vec{v}_\mathrm{fric}}{\Delta t}=-K\rho|\vec{v}|\vec{v}
+\]
+hvor $|\vec{v}|$ er absoluttverdien til hastighetsvektoren til partikkelen og $K=1.3\times10^{-9}\mathrm{m}^{-1}$. Relativt antall partikler i skallet der partikkelen befinner seg betegnes med $\rho=N_\mathrm{skall}/N$. Vi ser at jo høyere tetthet av partikler (altså flere kollisjoner) og jo høyere hastighet, jo større nedbremsing. Vi ser også at vektoren alltid vil peke i motsatt retning av hastighetsvektoren og dermed alltid gi bremsing. Denne hastighetsendringen må legges til $\Delta\vec{v}_i$ over. Situasjonen er illustert i figur \ref{fig:illustrasjon} der vi ser noen av partiklene i skya. Gravitasjonskrafta peker mot krysset som viser sentrum av skya mens friksjonskrafta peker i motsatt retning av hastighetsvektoren til partikkelen.
+
+\begin{figure}[htbp]
+\includegraphics[width=0.5\linewidth]{gas_cloud_illustration_example.png}
+\caption{Figuren illustrerer problemet: noen av partiklene i gass-skya er tegnet inn. Krysset viser sentrum av skya. På et av partiklene er hastighetsvektoren samt gravitasjons- og friksjonskrefter tegnet inn.\label{fig:illustrasjon}} 
+\end{figure}
+
+Vi får altså en ny hastighet for partikkel $i$ som er
+\begin{equation}
+\label{eq:euler1}
+\vec{v}_i^\mathrm{ny}=\vec{v}_i+\Delta\vec{v}_i
+\end{equation}
+
+Vi kan videre bruke likning \ref{eq:vel} til å beregne ny posisjon til partikkelen:
+\[
+d\vec{r}_i=\vec{v_i}dt.
+\]
+Her er $d\vec{r}_i$ (eller $\Delta\vec{r}_i$) en liten korreksjonsvektor til posisjonen slik at ny posisjon blir
+\begin{equation}
+\label{eq:euler2}
+\vec{r}_i^\mathrm{ny}=\vec{r}_i+\Delta\vec{r}_i
+\end{equation}
+
+Merk at vi har delt gass-skya inn i 100 kuleskall og behandler alle partikler innen et gitt kuleskall på samme måte. Alle partikler innen et gitt kuleskall blir antatt å bli påvirket av massen til alle partikler i alle kuleskall på innsiden, men ikke fra det gitte kuleskallet. I det innerste kuleskallet (som er en kule) antar vi at det ikke virker gravitasjonskrefter. Når det etterhvert blir mange partikler her så bryter antakelsen vår sammen.
+
+Algoritmen som har blitt brukt i denne artikkelen starter med et sett med utgangsposisjoner og hastigheter for partiklene og utvikler deretter disse posisjonene fremover i tid under påvirkning av tyngdekraft som beskrevet i likningne \ref{eq:euler1} og \ref{eq:euler2}. Dette kalles Eulers metode. Etter hvert tidssteg så blir ny temperatur og radius for skya beregnet. 
+
+Man kunne tenke seg at problemet også kunne løses analytisk, men i dette tilfellet måtte man sannsynligvis også gjort antakelser om sfærisk symmetrisk massefordeling. Selv med denne antakelsen er det ikke klart om problemet ville kunne løses analytisk. Fordelen med numerisk steg of steg løsning slik som vi har valgt her er at man enkelt kan implementere flere fysiske effekter og dermed øke nøyaktigheten av simuleringen.
+
+\section{Resultater}
+
+Totalmassen til gass-skya er 1 solmasse fordelt på 500 partikler. Partiklene er fordelt utover i en kule med radius $2.5\times10^{11}$m.. Vi brukte utgangsposisjoner og hastigheter tatt fra tidligere arbeider \citep{part1A} og bruker, som forklart i forrige avsnitt, kinetisk energi til å finne at temperaturen til gass-skya er $T=20$K. I figur \ref{fig:boltzmann} viser vi et histogram av hastighetene til partiklene i $x$, $y$ og $z$-retning separat.  Vi antar at gassen er ideel noe som betyr at hastighetene skal følge Maxwell-Boltzmann-fordelingen. For å kontrollere at dette stemmer, har vi plottet  Maxwell-Boltzmann-fordelingen for $T=20$K på toppen av histogrammene og får bekreftet at vi har en ideel gass selv om det er litt fluktuasjoner rundt kurven på grunn av at vi har et begrenset antall partikler. Vi hadde litt problemer med a få plottet riktig i starten helt til vi innså at histogrammet måtte normaliseres slik at integralet under kurven blir 1 på samme måte som Maxwell-Boltzmann-fordelingen.
+
+\begin{figure}[htbp]
+\includegraphics[width=\linewidth]{velhist_0.png}
+\includegraphics[width=\linewidth]{velhist_1.png}
+\includegraphics[width=\linewidth]{velhist_2.png}
+\caption{Histogram av hastighetskomponentene i x, y og z-retning (fra ovenfra og nedover) tatt fra 500 partikler ved $t=0$. Den røde linjen viser Maxwell-Boltzmannfordelingen basert på temperaturen til disse partiklene.\label{fig:boltzmann}} 
+\end{figure}
+
+
+For å gjøre beregningene raskere, så velger vi å kjøre simuleringen med kun 50 partikler. Vi kjører så simuleringen i 70.000 tidssteg der hvert tidssteg er på $10^{-6}$ år. I figur \ref{fig:particles} viser vi posisjonen til partiklene for 3 forskjellige tidssteg i løpet av simuleringen. Vi ser tydelig hvordan skya trekker seg sammen. I figur \ref{fig:radtemp} ser vi hvordan midlere radius og temperatur til skya utvikler seg med tiden og til slutt stabiliserer seg på en radius som tilsvarer 1.4 ganger solradien etter ca. 0.35 år. Temperaturenkurven fluktuerer kraftig siden vi har veldig få partikler og dermed veldig dårlig statistikk. For å beregne gasstemperaturen på slutten av simuleringen, så tar vi midlet over hele perioden der vi ser at radiusen er stabil, dvs. fra 0.35 år. Vi finner at slutt-temperaturen er 541.000K som er for lavt til at fusjonsreaksjoner kan sette igang. Radien nœrmer seg altså solradien mens temperaturen er alt for lav. Dette tyder på at noe er feil i modellen.
+
+\begin{figure}[htbp]
+\includegraphics[width=0.32\linewidth]{frm_00000000.png}
+\includegraphics[width=0.32\linewidth]{frm_00000030.png}
+\includegraphics[width=0.32\linewidth]{frm_00000060.png}
+\caption{Posisjonen til 50 partikler i 3 forskjellige tidssteg, fra venstre mot høyre: $t=0$, $t=0.15$år og $t=0.3$år. \label{fig:particles}} 
+\end{figure}
+
+\begin{figure}[htbp]
+\includegraphics[width=\linewidth]{temperatur.png}
+\includegraphics[width=\linewidth]{radius.png}
+\caption{Temperatur (øverst) og radius (nederst) til skya som funksjon av tida \label{fig:radtemp}} 
+\end{figure}
+
+I figur \ref{fig:boltzmann2} så viser vi histogrammet til hastighetsfordelingene til partiklene etter simuleringen samt et plott av Maxwell-Boltzmann-fordelingen for temperaturen som partiklene har i siste tidssteg. Vi ser at 50 partikler gir veldig store fluktuasjoner, så vi kjørte koden på nytt med 500 partikler. Resultatet ser vi i figur \ref{fig:boltzmann3} som indikerer at gassen enda oppfører seg tilnœrmet som en ideel gass.
+
+\begin{figure}[htbp]
+\includegraphics[width=\linewidth]{endvelhist50_0.png}
+\includegraphics[width=\linewidth]{endvelhist50_1.png}
+\includegraphics[width=\linewidth]{endvelhist50_2.png}
+\caption{Histogram av hastighetskomponentene i x, y og z-retning (fra øverst til nederst) tatt av 50 partikler etter 0.7 år. Den røde linjen viser Maxwell-Boltzmannfordelingen basert på temperaturen til disse partiklene.\label{fig:boltzmann2}} 
+\end{figure}
+
+\begin{figure}[htbp]
+\includegraphics[width=\linewidth]{endvelhist500_0.png}
+\includegraphics[width=\linewidth]{endvelhist500_1.png}
+\includegraphics[width=\linewidth]{endvelhist500_2.png}
+\caption{Histogram av hastighetskomponentene i x, y og z-retning (fra øverst til nederst) tatt av 500 partikler etter 0.7 år. Den røde linjen viser Maxwell-Boltzmannfordelingen basert på temperaturen til disse partiklene.\label{fig:boltzmann3}} 
+\end{figure}
+
+
+Til slutt kjører vi koden på nytt uten friksjonsledd. Så lenge det ikke er noe som bremser partiklene, så vil vi tro at de faller innover mot sentrum, men så kommer ut igjen med samme hastighet. Det blir som banebevegelser i et fler-legeme-system. Kanskje vil radien endres litt, men det er ikke gitt at vi får kollaps til en mye mindre radius. Dette stemmer godt med det som vi ser i simuleringa.
+
+
+
+\section{Diskusjon}
+
+Vi ser at størrelsen på gass-skya og temperaturen har stabilisert seg uten at vi har fått dannet en stjerne. En av årsaken til dette finner vi når vi innser at radien på stjerna ikke er mye mindre enn radien til det innerste skallet. Som beskrevet over, så beregner algoritmen vår ikke gravitasjonskrefter for partiklene i det innerste skallet. Dermed vil radien aldri kunne krympe mye videre. En løsning på dette er å dele opp skya i enda mindre skall eller å starte simuleringen på nytt ved å dele opp det innerste skallet i en rekke mindre skall.  For å teste at dette virkelig er årsaken til at radiusen ikke krymper videre, så kjørte vi simuleringen på nytt med 200 skall istedenfor 100. Da kollapset gass-skyen som ventet til halvparten av det tidligere resultatet.
+
+Vi ser også at gass-skya kollapser og temperaturen i sentrum øker fra $20$K og opp til en halv million grader i løpet av kun 0.7 år. Dette er helt klart urealistisk og en av hovedårsakene til denne feilen samt andre merkelige resultater er at friksjonsleddet er en kraftig overforenkling. De faktiske prosessene som bremser partiklene er beskrevet over og kan ikke reduseres til et enkelt friksjonsledd.
+
+Hvis vi ser bort fra disse tilnœrmelsene så må vi undersøke andre tilnœrmelser som vi har gjort: Spesielt lengden på tidssteget i Eulermetoden er det viktig å undersøke om er lite nok. Er tidssteget for stort så vil bevegelsene vœre veldig unøyaktige. Vi kjører derfor simuleringen på nytt med 1/10 så store tidssteg, og 10 ganger så mange tidssteg totalt. Resultatene var svœrt konsistente, noe som bekrefter at tidssteget vårt var lite nok og ikke årsak til de merkelige resultatene.
+
+50 partikler gir svœrt lite statistikk og er en kilde til feil. Spesielt så vi over at temperaturen fluktuerer kraftig. Vi antok at årsaken var det lave antall partikler. Vi kjørte nå koden på nytt med 500 partikler. Resultatene var enda fullt konsistente, men fluktuasjonene i temperatur gikk som ventet kraftig ned. En video av kollapsen med 500 partikler kan sees \href{http://www.uio.no/studier/emner/matnat/astro/AST2000/h17/undervisningsmateriale-2017/filer-til-oppgaver/gas_cloud_collapse.gif}{i denne linken.}
+
+
+\section{Konklusjon}
+
+Vi har laget en meget forenklet kode for stjernedannelse. Metoden har klare begrensninger da vi ikke tar hensyn til interaksjon mellom partiklene som trengs for å inkludere effektene av f.eks. gasstrykk. Vi tar heller ikke hensyn til strålingen som oppstår, i tillegg til at vi for å lage koden raskere deler gass-skya opp i et begrenset antall kuleskall som gjør at simuleringen bryter sammen når mange partikler har fallt inn til det innerste skallet.
+
+
+
+\begin{acknowledgments}
+Takk til A. Einstein, W. Heisenberg, N. Bohr og E. Hubble for nyttige diskusjoner under arbeidet med denne artikkelen. Takker også I. Newton og J. Maxwell for kaffe og kaker under arbeidet.
+\end{acknowledgments}
+
+
+
+
+\begin{thebibliography}{}
+\bibitem[Hansen (2017)]{part1A} Hansen, F. K.,  2017, Forelesningsnotat 1A i kurset AST2000
+
+
+\end{thebibliography}
+
+
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
